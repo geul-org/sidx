@@ -59,8 +59,8 @@ SIDX              나머지 전부
 - 폭은 미결정이다. 4 WORD(64비트)와 16 WORD 등을 검토 중이다. 상위 비트에 의미가 있어 다른 선언 Codec의 "가장 짧은 폭" 규칙을 그대로 쓸 수 없으므로 고정 폭(또는 하위 형식별 고정 폭)이 될 것이다. 정해질 때까지 규격 문서는 SIDX를 나머지 폭 날값으로 선언한다.
 - 비규범 예시: 64비트 `0x1234 5678 9abc def0`, Identified → `0218 1234 5678 9abc def0`.
 - 정수값이 같으면 같은 대상이다. 배정으로 유일성을 보장한다.
-- 명세: geul-dev `docs/reference/GEUL-SIDX.md`, 공개 문법 [geul.org/ko/grammar/reference](https://geul.org/ko/grammar/reference/).
-- geul.org 용어 정의 문서 `sidx`(`0x0001000000000003`)가 이 저장소를 도구로 가리킨다(geul-dev `docs/GEUL-ORG.md`). 옛 0908 판 위키데이터 적재 도구로 커밋 `4225b3b`의 `artifacts/wikidata/postgres.go`가 인용된다(gogeulwiki README). 그래서 이 파일은 경로를 옮기지 않는다.
+- 명세: geul.org 문법 [GEUL-SIDX](https://geul.org/ko/grammar/reference/geul-sidx/)(SSOT).
+- geul.org 용어 정의 문서 `sidx`(`0x0001000000000003`)가 이 저장소를 도구로 가리킨다([Issuer와 공표](https://geul.org/ko/grammar/issuer/#용어-정의-문서)). 옛 0908 판 위키데이터 적재 도구로 커밋 `4225b3b`의 `artifacts/wikidata/postgres.go`가 인용된다(gogeulwiki README). 그래서 이 파일은 경로를 옮기지 않는다.
 
 ## 저장소 구성
 
