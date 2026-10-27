@@ -113,9 +113,9 @@ from contextlib import contextmanager
 
 DB_CONFIG = {
     "read": {"host": "localhost", "port": 5432, "dbname": "geuldev",
-             "user": "geul_reader", "password": "test1224"},
+             "user": "geul_reader", "password": "<password>"},
     "write": {"host": "localhost", "port": 5432, "dbname": "geulwork",
-              "user": "geul_writer", "password": "test1224"}
+              "user": "geul_writer", "password": "<password>"}
 }
 
 @contextmanager

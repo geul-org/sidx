@@ -1,8 +1,12 @@
 import psycopg2
 import json
 import os
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+from sidx_env import env
 
-CONN_STR = "host=localhost user=postgres password=test1224! dbname=geuldev"
+CONN_STR = f"host=localhost user=postgres password={env('POSTGRES_PASSWORD')} dbname=geuldev"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_PATH = os.path.join(SCRIPT_DIR, "wikitrees1.json")
 

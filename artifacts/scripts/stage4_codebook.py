@@ -13,6 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 import psycopg2
+from sidx_env import env
 
 # 경로 설정
 SCRIPT_DIR = Path(__file__).parent
@@ -25,11 +26,11 @@ CODEBOOK_DIR = OUTPUT_DIR / "codebooks"
 DB_CONFIG = {
     "read": {
         "host": "localhost", "port": 5432, "dbname": "geuldev",
-        "user": "geul_reader", "password": "test1224"
+        "user": "geul_reader", "password": env("GEUL_READER_PASSWORD")
     },
     "write": {
         "host": "localhost", "port": 5432, "dbname": "geulwork",
-        "user": "geul_writer", "password": "test1224"
+        "user": "geul_writer", "password": env("GEUL_WRITER_PASSWORD")
     }
 }
 

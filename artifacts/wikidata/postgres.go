@@ -84,7 +84,7 @@ func main() {
     fmt.Printf("배치 크기: %d\n", BATCH_SIZE)
     
     // PostgreSQL 연결
-    connStr := "host=localhost user=postgres password=test1224! dbname=geuldev sslmode=disable"
+    connStr := "host=localhost user=postgres password=" + envValue("POSTGRES_PASSWORD") + " dbname=geuldev sslmode=disable"
     db, err := sql.Open("postgres", connStr)
     if err != nil {
         log.Fatal("DB 연결 실패:", err)
@@ -642,4 +642,27 @@ func printFinalStats() {
         float64(items)/totalTime.Seconds(),
         float64(triples)/totalTime.Seconds())
     fmt.Println("==============================")
+}
+// envValue is key from the environment, or else from the nearest .env
+// (KEY=VALUE lines) in the working directory or one of its parents.
+func envValue(key string) string {
+	if v, ok := os.LookupEnv(key); ok {
+		return v
+	}
+	dir, _ := os.Getwd()
+	for {
+		if b, err := os.ReadFile(filepath.Join(dir, ".env")); err == nil {
+			for _, line := range strings.Split(string(b), "\n") {
+				k, v, ok := strings.Cut(strings.TrimSpace(line), "=")
+				if ok && !strings.HasPrefix(k, "#") && strings.TrimSpace(k) == key {
+					return strings.Trim(strings.TrimSpace(v), "\"'")
+				}
+			}
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			log.Fatalf("%s가 없다: 저장소 루트 .env에 적는다(.env.example 참고)", key)
+		}
+		dir = parent
+	}
 }

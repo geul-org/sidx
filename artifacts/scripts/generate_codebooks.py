@@ -11,6 +11,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 import psycopg2
+from sidx_env import env
 
 # 경로 설정
 SCRIPT_DIR = Path(__file__).parent
@@ -19,7 +20,7 @@ REFERENCES_DIR = PROJECT_DIR / "references"
 OUTPUT_DIR = PROJECT_DIR / "output"
 
 # DB 설정 (읽기 전용)
-DB_CONN = "postgresql://geul_reader:test1224@localhost:5432/geuldev"
+DB_CONN = f"postgresql://geul_reader:{env("GEUL_READER_PASSWORD")}@localhost:5432/geuldev"
 
 
 def get_conn():

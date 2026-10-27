@@ -10,6 +10,10 @@ import sys
 from collections import defaultdict, Counter
 from itertools import combinations
 import psycopg2
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "artifacts" / "scripts"))
+from sidx_env import env
 
 # 제외할 속성 (외부 ID, 이름 등)
 EXCLUDE_PROPERTIES = {
@@ -26,13 +30,13 @@ EXCLUDE_PROPERTIES = {
 def get_read_conn():
     return psycopg2.connect(
         host="localhost", port=5432, dbname="geuldev",
-        user="geul_reader", password="test1224"
+        user="geul_reader", password=env("GEUL_READER_PASSWORD")
     )
 
 def get_write_conn():
     return psycopg2.connect(
         host="localhost", port=5432, dbname="geulwork",
-        user="geul_writer", password="test1224"
+        user="geul_writer", password=env("GEUL_WRITER_PASSWORD")
     )
 
 def entropy(counter: Counter) -> float:

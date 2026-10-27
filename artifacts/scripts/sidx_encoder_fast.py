@@ -15,6 +15,7 @@ import sys
 import os
 from multiprocessing import Pool, cpu_count
 import time
+from sidx_env import env
 
 # 상수
 SIDX_PREFIX = 0b0001001  # 7비트 Proposal Entity prefix
@@ -97,7 +98,7 @@ def process_chunk(args):
     offset, limit = args
     load_references()
 
-    read_conn = psycopg2.connect('postgresql://geul_reader:test1224@localhost:5432/geuldev')
+    read_conn = psycopg2.connect(f'postgresql://geul_reader:{env("GEUL_READER_PASSWORD")}@localhost:5432/geuldev')
     read_cur = read_conn.cursor()
 
     # 엔티티와 P31 값을 한번에 가져오기
@@ -153,7 +154,7 @@ def main():
     start_time = datetime.now()
 
     # 전체 개체 수
-    conn = psycopg2.connect('postgresql://geul_reader:test1224@localhost:5432/geuldev')
+    conn = psycopg2.connect(f'postgresql://geul_reader:{env("GEUL_READER_PASSWORD")}@localhost:5432/geuldev')
     cur = conn.cursor()
     cur.execute("SELECT COUNT(*) FROM entities")
     total_count = cur.fetchone()[0]
@@ -174,7 +175,7 @@ def main():
     print(f"총 {len(chunks)}개 청크 처리 시작...")
 
     # DB 연결
-    write_conn = psycopg2.connect('postgresql://geul_writer:test1224@localhost:5432/geulwork')
+    write_conn = psycopg2.connect(f'postgresql://geul_writer:{env("GEUL_WRITER_PASSWORD")}@localhost:5432/geulwork')
     write_cur = write_conn.cursor()
 
     total_processed = 0

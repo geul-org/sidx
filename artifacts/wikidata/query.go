@@ -13,12 +13,6 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-// --- 설정 ---
-const (
-	// 데이터베이스 연결 정보
-	CONN_STR = "host=localhost user=postgres password=test1224! dbname=geuldev sslmode=disable"
-)
-
 func main() {
 	// --- 1. 커맨드 라인 플래그 정의 ---
 	path := flag.String("path", "", "결과를 저장할 JSON 파일 경로 (필수)")
@@ -49,7 +43,7 @@ func main() {
 	}
 
 	// --- 4. 데이터베이스 연결 ---
-	dbpool, err := pgxpool.Connect(context.Background(), CONN_STR)
+	dbpool, err := pgxpool.Connect(context.Background(), connStr())
 	if err != nil {
 		log.Fatalf("DB 연결 실패: %v", err)
 	}
@@ -132,4 +126,32 @@ func executeAndSave(dbpool *pgxpool.Pool, query string, outputPath string) error
 	}
 
 	return nil
+}
+// connStr is the database connection string; the password comes from .env.
+func connStr() string {
+	return "host=localhost user=postgres password=" + envValue("POSTGRES_PASSWORD") + " dbname=geuldev sslmode=disable"
+}
+
+// envValue is key from the environment, or else from the nearest .env
+// (KEY=VALUE lines) in the working directory or one of its parents.
+func envValue(key string) string {
+	if v, ok := os.LookupEnv(key); ok {
+		return v
+	}
+	dir, _ := os.Getwd()
+	for {
+		if b, err := os.ReadFile(filepath.Join(dir, ".env")); err == nil {
+			for _, line := range strings.Split(string(b), "\n") {
+				k, v, ok := strings.Cut(strings.TrimSpace(line), "=")
+				if ok && !strings.HasPrefix(k, "#") && strings.TrimSpace(k) == key {
+					return strings.Trim(strings.TrimSpace(v), "\"'")
+				}
+			}
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			log.Fatalf("%s가 없다: 저장소 루트 .env에 적는다(.env.example 참고)", key)
+		}
+		dir = parent
+	}
 }

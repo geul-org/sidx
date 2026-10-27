@@ -6,8 +6,8 @@ Generated: 2026-01-31
 
 | DB | Connection | Permission |
 |---|---|---|
-| geuldev | `postgresql://geul_reader:test1224@localhost:5432/geuldev` | READ ONLY |
-| geulwork | `postgresql://geul_writer:test1224@localhost:5432/geulwork` | READ/WRITE |
+| geuldev | `postgresql://geul_reader:<password>@localhost:5432/geuldev` | READ ONLY |
+| geulwork | `postgresql://geul_writer:<password>@localhost:5432/geulwork` | READ/WRITE |
 
 ---
 

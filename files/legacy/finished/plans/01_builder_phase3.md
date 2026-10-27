@@ -71,7 +71,7 @@
 
 ```bash
 # DB 연결 확인
-PGPASSWORD=test1224 psql -h localhost -U geul_reader -d geuldev -c "SELECT 1"
+PGPASSWORD=<password> psql -h localhost -U geul_reader -d geuldev -c "SELECT 1"
 
 # Stage 4 실행 (새 코드북)
 python scripts/stage4_codebook.py 0x00 0x0C 0x1C 0x2C 0x33

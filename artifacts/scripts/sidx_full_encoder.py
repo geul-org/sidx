@@ -14,6 +14,7 @@ from datetime import datetime
 import sys
 import os
 import re
+from sidx_env import env
 
 # 상수
 SIDX_PREFIX = 0b0001001
@@ -790,8 +791,8 @@ def main():
 
     # 2. DB 연결
     print("\n[2/5] DB 연결...")
-    read_conn = psycopg2.connect('postgresql://geul_reader:test1224@localhost:5432/geuldev')
-    write_conn = psycopg2.connect('postgresql://geul_writer:test1224@localhost:5432/geulwork')
+    read_conn = psycopg2.connect(f'postgresql://geul_reader:{env("GEUL_READER_PASSWORD")}@localhost:5432/geuldev')
+    write_conn = psycopg2.connect(f'postgresql://geul_writer:{env("GEUL_WRITER_PASSWORD")}@localhost:5432/geulwork')
     read_cur = read_conn.cursor()
     write_cur = write_conn.cursor()
 

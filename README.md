@@ -1,338 +1,141 @@
-# GEUL Entity Node
+# SIDX
 
-**GEUL(General Encoding Unified Language) Entity Node의 48비트 속성 스키마를 위키데이터 실데이터 기반으로 자동 설계하는 프로젝트.**
+자주 쓰이는 위키데이터 Q아이디와 GEUL ID를 분석해, 의미가 가까울수록 번호도 가깝게 SIDX를 배정하는 프로젝트다.
 
 | 항목 | 값 |
-|------|-----|
-| Author | 박준우 (mail@parkjunwoo.com) |
-| License | MIT |
-| Status | Standard Proposal (v0.4) |
+|---|---|
+| 저장소 | [geul-org/sidx](https://github.com/geul-org/sidx) (옛 이름 geul-entity) |
+| 명세 | GEUL v1 Reference `GEUL-SIDX`(Codec `0011`) |
+| 상태 | 재출발. 배정 결과는 아직 없다 |
 
----
+## SIDX
 
-## 1. 개요
+SIDX(Semantic-aligned Index)는 의미 주소다. 번호가 가까우면 의미도 가깝다.
 
-**Entity Node**는 GEUL 스트림에서 개체(사람, 장소, 사물, 조직, 개념 등)를 식별하는 **고정 길이 4워드(64비트) 패킷**이다.
+- GEUL ID(Reference `GEUL`, `0010`)와 역할이 다르다. GEUL ID는 대체로 순서대로 배정하는 정체성 ID이고 번호에 의미가 없다. SIDX는 의미가 가까운 대상에 가까운 값을 준다(GEUL v1 GEUL-SIDX 배정 방침).
+- 위키데이터 Q아이디(`WIKIDATA-QID`, `0100`)도 번호에 의미가 없다.
+- 한 대상이 GEUL ID와 SIDX를 함께 가지면 두 Reference를 `SAME-NODE`로 잇는다.
 
-| 특성 | 설명 |
-|------|------|
-| **Non-unique** | 같은 SIDX에 여러 개체 가능 |
-| **Multi-SIDX** | 한 개체가 여러 SIDX 가능 (시점/역할별) |
-| **비트 = 의미** | 비트 위치 자체가 속성을 나타냄 |
-| **추상/구체 연속** | Mode와 Attributes 채움 정도로 구분 |
+## 왜
 
-**예시:**
-- 트럼프 (부동산 사업가) → SIDX_A
-- 트럼프 (대통령) → SIDX_B (다른 SIDX)
-- "Human + Male + Korea" → 추상적 "한국 남자"
-- "Human + Male + Korea + 1946 + Business + ..." → 거의 특정 인물
+GEUL 레코드는 색인으로 쓴다. 색인 번호가 의미 순서를 따르면 다음이 쉬워진다.
 
----
+- 범위 질의. 의미가 가까운 대상이 한 정수 구간에 모이면 "이 근처"를 구간 하나로 찾는다.
+- 정렬·압축. 정렬한 색인에서 이웃 값의 차가 작아진다.
+- 근사 비교. 번호만 보고 같은 동네인지 먼저 거른다.
 
-## 2. 구조 (4워드 = 64비트)
+한계도 있다. 의미는 여러 축이지만 번호는 한 줄이다. 가까운 번호는 가까운 의미를 뜻하도록 배정하지만, 먼 번호가 먼 의미라는 보장은 없다.
 
-```
-1st WORD (16비트)
-┌─────────┬──────┬────────────┐
-│ Prefix  │ Mode │ EntityType │
-│  7bit   │ 3bit │   6bit     │
-└─────────┴──────┴────────────┘
+## 입력
 
-2nd WORD (16비트)         3rd WORD (16비트)         4th WORD (16비트)
-┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
-│ Attributes 상위  │      │ Attributes 중위  │      │ Attributes 하위  │
-│     16비트       │      │     16비트       │      │     16비트       │
-└─────────────────┘      └─────────────────┘      └─────────────────┘
-```
+| 입력 | 원천 | 상태 |
+|---|---|---|
+| Q아이디 사용 빈도 | 위키데이터. geuldev 스키마 `wikidata`([wikipg](https://github.com/geul-org/wikipg) 적재) | 새 적재본으로 아직 집계하지 않았다. `artifacts/wikidata/`의 집계는 옛 적재본 기준이다 |
+| Q아이디 사이 관계 | 같은 DB의 `P31`(instance of), `P279`(subclass of) 등 | `artifacts/wikidata/wikitrees1.json`(옛 적재본) |
+| GEUL ID 사용 빈도 | GEUL 문서에 나오는 Reference | GEUL ID 배정 규칙과 레지스트리가 GEUL v1에서 미결정이다 |
 
-| 필드 | 비트 | 크기 | 설명 |
-|------|------|------|------|
-| Prefix | 1-7 | 7 | `0001001` (Entity Node 식별) |
-| Mode | 8-10 | 3 | 8가지 양화/수 모드 |
-| EntityType | 11-16 | 6 | 64개 상위 타입 |
-| Attributes | 17-64 | 48 | 타입별 가변 스키마 |
+- CC0 원천만 쓴다. 위키데이터는 CC0다.
+- WordNet, 표준국어대사전 등 CC0가 아닌 자료는 배정 근거로 쓰지 않고, 그 내용·구조·목록을 배정 결과에 넣지 않는다.
 
----
+## 배정 (초안)
 
-## 3. Mode (3비트)
+1. 대상을 고른다. 사용 빈도 상위부터 한다. 통계가 모이기 전의 대상은 GEUL ID로 가리킨다(GEUL v1 배정 방침).
+2. 근접도를 잰다. 후보는 위키데이터 계층(`P31`·`P279`) 거리, 속성·값 공유, GEUL 문서 안 공동 출현이다. 아직 정하지 않았다.
+3. 한 줄로 놓는다. 가까운 대상끼리 이웃하도록 정렬한다(예: 계층 트리 순회, 군집 뒤 순서화).
+4. 번호를 준다. 이웃 사이에 빈자리를 남기는 희소 배정으로 한다. 이미 준 번호는 옮기지 않는다(append-only).
+5. 공표한다. 배정을 GEUL 문서로 내고, 같은 대상의 GEUL-SIDX와 GEUL·WIKIDATA-QID를 `SAME-NODE`로 잇는다.
 
-Mode는 개체의 **양화(Quantification)와 수(Number)**를 3비트로 통합 표현한다.
+## GEUL v1과의 관계
 
-| 코드 | 의미 | 예시 |
-|------|------|------|
-| 0 | **등록 개체** | 이순신, 삼성전자, BTS |
-| 1 | 특정 단수 | "그 사람" |
-| 2 | 특정 소수 | "그 몇몇" |
-| 3 | 특정 다수 | "그 사람들" |
-| 4 | 전칭 | "모든 ~" |
-| 5 | 존재 | "어떤 ~" |
-| 6 | 불특정 | "아무 ~" |
-| 7 | 총칭 | "한국인이란" |
-
----
-
-## 4. EntityType (6비트 = 64개)
-
-위키데이터 P31(instance of) 빈도 통계 기반, 9개 카테고리로 그룹화.
-
-**생물/인물 (0x00-0x07)**
-
-| 코드 | 타입 | 대표 Q-ID | 개체수 |
-|------|------|-----------|--------|
-| 0x00 | Human | Q5 | 12.5M |
-| 0x01 | Taxon | Q16521 | 3.8M |
-| 0x02 | Gene | Q7187 | 1.2M |
-| 0x03 | Protein | Q8054 | 1.0M |
-| 0x04 | CellLine | Q21014462 | 154K |
-| 0x05 | FamilyName | Q101352 | 662K |
-| 0x06 | GivenName | Q202444 | 128K |
-| 0x07 | FictionalCharacter | Q15632617 | 98K |
-
-**화학/물질 (0x08-0x0B)**
-
-| 코드 | 타입 | 대표 Q-ID | 개체수 |
-|------|------|-----------|--------|
-| 0x08 | Chemical | Q113145171 | 1.3M |
-| 0x09 | Compound | Q11173 | 1.1M |
-| 0x0A | Mineral | Q7946 | 62K |
-| 0x0B | Drug | Q12140 | 45K |
-
-**천체 (0x0C-0x13)**
-
-| 코드 | 타입 | 대표 Q-ID | 개체수 |
-|------|------|-----------|--------|
-| 0x0C | Star | Q523 | 3.6M |
-| 0x0D | Galaxy | Q318 | 2.1M |
-| 0x0E | Asteroid | Q3863 | 249K |
-| 0x0F | Quasar | Q83373 | 178K |
-| 0x10 | Planet | Q634 | 15K |
-| 0x11 | Nebula | Q12057 | 8K |
-| 0x12 | StarCluster | Q168845 | 5K |
-| 0x13 | Moon | Q2537 | 3K |
-
-**지형/자연 (0x14-0x1B)**
-
-| 코드 | 타입 | 대표 Q-ID | 개체수 |
-|------|------|-----------|--------|
-| 0x14 | Mountain | Q8502 | 518K |
-| 0x15 | Hill | Q54050 | 321K |
-| 0x16 | River | Q4022 | 427K |
-| 0x17 | Lake | Q23397 | 292K |
-| 0x18 | Stream | Q47521 | 194K |
-| 0x19 | Island | Q23442 | 153K |
-| 0x1A | Bay | Q39594 | 25K |
-| 0x1B | Cave | Q35509 | 20K |
-
-**장소/행정 (0x1C-0x23)**
-
-| 코드 | 타입 | 대표 Q-ID | 개체수 |
-|------|------|-----------|--------|
-| 0x1C | Settlement | Q486972 | 580K |
-| 0x1D | Village | Q532 | 245K |
-| 0x1E | Hamlet | Q5084 | 148K |
-| 0x1F | Street | Q79007 | 711K |
-| 0x20 | Cemetery | Q39614 | 298K |
-| 0x21 | AdminRegion | Q15284 | 100K |
-| 0x22 | Park | Q22698 | 45K |
-| 0x23 | ProtectedArea | Q473972 | 35K |
-
-**건축물 (0x24-0x2B)**
-
-| 코드 | 타입 | 대표 Q-ID | 개체수 |
-|------|------|-----------|--------|
-| 0x24 | Building | Q41176 | 292K |
-| 0x25 | Church | Q16970 | 286K |
-| 0x26 | School | Q9842 | 242K |
-| 0x27 | House | Q3947 | 235K |
-| 0x28 | Structure | Q811979 | 216K |
-| 0x29 | SportsVenue | Q1076486 | 145K |
-| 0x2A | Castle | Q23413 | 42K |
-| 0x2B | Bridge | Q12280 | 38K |
-
-**조직 (0x2C-0x2F)**
-
-| 코드 | 타입 | 대표 Q-ID | 개체수 |
-|------|------|-----------|--------|
-| 0x2C | Organization | Q43229 | 531K |
-| 0x2D | Business | Q4830453 | 242K |
-| 0x2E | PoliticalParty | Q7278 | 35K |
-| 0x2F | SportsTeam | Q847017 | 95K |
-
-**창작물 (0x30-0x3B)**
-
-| 코드 | 타입 | 대표 Q-ID | 개체수 |
-|------|------|-----------|--------|
-| 0x30 | Painting | Q3305213 | 1.1M |
-| 0x31 | Document | Q49848 | 45.0M |
-| 0x32 | LiteraryWork | Q7725634 | 395K |
-| 0x33 | Film | Q11424 | 336K |
-| 0x34 | Album | Q482994 | 303K |
-| 0x35 | MusicalWork | Q105543609 | 195K |
-| 0x36 | TVEpisode | Q21191270 | 177K |
-| 0x37 | VideoGame | Q7889 | 172K |
-| 0x38 | TVSeries | Q5398426 | 85K |
-| 0x39 | Patent | Q43305660 | 289K |
-| 0x3A | Software | Q7397 | 13K |
-| 0x3B | Website | Q35127 | 12K |
-
-**이벤트/예약 (0x3C-0x3F)**
-
-| 코드 | 타입 | 대표 Q-ID | 개체수 |
-|------|------|-----------|--------|
-| 0x3C | SportsSeason | Q27020041 | 183K |
-| 0x3D | Event | Q1656682 | 10K |
-| 0x3E | Election | Q40231 | 11K |
-| 0x3F | Other | - | 예약 |
-
----
-
-## 5. Attributes (48비트)
-
-- **타입별 가변 스키마** — EntityType마다 다른 의미로 해석
-- 고빈도 속성에 더 많은 비트 할당
-- 상위 필드 값이 하위 필드 코드북을 결정 (계층적 해석)
-- SIMD 필터링에 직접 활용
-
-### Human (0x00) 예시
+GEUL-SIDX는 선언 Reference다.
 
 ```
-┌──────────┬────────┬────────┬──────┬────────┬────────┬─────────┬────────┬──────────┬──────────┐
-│ 소분류   │ 직업   │ 국적   │ 시대 │ 연대   │ 성별   │ 저명도  │ 언어   │ 출생지역 │ 활동분야 │
-│  5bit    │  6bit  │  8bit  │ 4bit │  4bit  │  2bit  │  3bit   │  6bit  │   6bit   │   4bit   │
-└──────────┴────────┴────────┴──────┴────────┴────────┴─────────┴────────┴──────────┴──────────┘
-= 48비트
+TAG WORD          0000 0LLL L001 1QQQ      CCCC = 0011
+[Length 확장 TAG]
+SIDX              나머지 전부
 ```
 
-### Star (0x0C) 예시
+- 양화는 Quantifier `QQQ`로만 한다. SIDX 값에 양화를 넣지 않는다.
+- 폭은 미결정이다. 4 WORD(64비트)와 16 WORD 등을 검토 중이다. 상위 비트에 의미가 있어 다른 선언 Codec의 "가장 짧은 폭" 규칙을 그대로 쓸 수 없으므로 고정 폭(또는 하위 형식별 고정 폭)이 될 것이다. 정해질 때까지 규격 문서는 SIDX를 나머지 폭 날값으로 선언한다.
+- 비규범 예시: 64비트 `0x1234 5678 9abc def0`, Identified → `0218 1234 5678 9abc def0`.
+- 정수값이 같으면 같은 대상이다. 배정으로 유일성을 보장한다.
+- 명세: geul-dev `docs/reference/GEUL-SIDX.md`, 공개 문법 [geul.org/ko/grammar/reference](https://geul.org/ko/grammar/reference/).
+- geul.org 용어 정의 문서 `sidx`(`0x0001000000000003`)가 이 저장소를 도구로 가리킨다(geul-dev `docs/GEUL-ORG.md`). 옛 0908 판 위키데이터 적재 도구로 커밋 `4225b3b`의 `artifacts/wikidata/postgres.go`가 인용된다(gogeulwiki README). 그래서 이 파일은 경로를 옮기지 않는다.
+
+## 저장소 구성
 
 ```
-┌──────────┬────────────┬──────────┬──────────┬──────────┬──────────┬────────────┬──────────┬──────────┬──────────┬────────┐
-│ 별자리   │ 분광형     │ 광도등급 │ 겉보기등급│ 적경구간 │ 적위구간 │ 특성플래그 │ 시선속도 │ 적색편이 │ 시차     │ 예비   │
-│   7bit   │    4bit    │   3bit   │   4bit   │   4bit   │   4bit   │    6bit    │   5bit   │   5bit   │   4bit   │  2bit  │
-└──────────┴────────────┴──────────┴──────────┴──────────┴──────────┴────────────┴──────────┴──────────┴──────────┴────────┘
-= 48비트
+README.md
+artifacts/
+  wikidata/    위키데이터 집계 데이터와 도구 (옛 적재본 기준)
+  scripts/     옛 48비트 Entity SIDX 파이프라인 (자료로만 둔다)
+files/
+  legacy/      옛 설계 문서와 산출물
+specs/         비어 있다
 ```
 
-64개 타입별 전체 스키마는 `references/type_schemas.json` 참조.
+### artifacts/wikidata
 
----
+| 파일 | 내용 |
+|---|---|
+| `postgres.go` | 위키데이터 JSON 덤프를 옛 `geuldev.public` 표에 적재하던 도구. 그 표는 2026-10-26 삭제됐고 wikipg가 대신한다 |
+| `wikidata.sql` | 옛 적재 표 정의(`entities`, `triples`, `hierarchy` 등) |
+| `property_usage.sql` | 속성 사용량·속성-목적어 빈도 표 정의(`property_usage_stats`, `property_object_stats`) |
+| `query.go` | SELECT 결과를 JSON 파일로 저장한다 |
+| `instance_top1000.json` | `P31` 목적어 빈도 상위 1,000 |
+| `usage_top1000.json` | 속성-목적어 쌍 빈도 상위 1,000 |
+| `tops.json` | `P31` 목적어 `[QID, 레이블, 개체 수]` 455개. 위키미디어 범주(`Q4167836`)는 없다 |
+| `country.json` | `P17`(country) 목적어 빈도 4,393개 |
+| `language.json` | `P407`(language of work or name) 목적어 빈도 2,822개 |
+| `wikitrees1.py`, `wikitrees1.json` | `P31` 목적어 타입의 `P279` 계층. 타입 108,790, 간선 122,551, 루트 1,555, 잎 65,331, 다중 부모 26,525 |
+| `exec.py`, `topcandidate.py` | `wikitrees1.json` 조회. 경로가 `geulso/wikidata/`로 박혀 있다 |
 
-## 6. 설계 원칙
+- DB 도구는 옛 표를 전제하고 접속 문자열이 코드에 박혀 있다. `geuldev.wikidata` 기준으로 고쳐 다시 집계해야 한다.
 
-1. **타입별 완전 독립** — 각 EntityType마다 48비트 해석이 완전히 다름
-2. **계층적 해석** — 상위 필드 값이 하위 필드의 코드 테이블을 결정
-3. **우아한 열화** — 비트를 덜 채울수록 추상적 표현
-4. **SIMD 최적화** — 비트 마스크로 범위 필터링 가능
-5. **기계적 할당** — LLM이 자연어에서 자동으로 SIDX 생성 가능
-6. **UID 없음** — 외부 ID는 Triple로 분리, 48비트 전부 의미정렬
+### artifacts/scripts
 
----
+옛 64비트 Entity SIDX(Prefix·Mode·EntityType·48비트 속성) 인코더와 5단계 파이프라인(`stage1_extract.py`~`stage5_validate.py`)이다. 옛 표와 `geulwork` DB, `references/*.json`(지금 `files/legacy/references/`)을 전제하므로 그대로는 돌지 않는다.
 
-## 7. 사용 예시
+### files/legacy
 
-### 등록 개체: 이순신
+옛 Entity Node 설계(SIDX v0.11, Entity Node v0.4, 인코더 명세, 64개 EntityType 48비트 스키마, 코드북, 단계 보고서, 계획)다. GEUL v1에서 폐기된 설계다. 그 안의 수치(커버리지, 충돌률 등)는 다시 검증하지 않았다.
 
-```python
-yi_sun_sin = make_entity(
-    mode=0,              # 등록 개체
-    entity_type=0x00,    # Human
-    attrs=(
-        (0x06 << 43) |   # 소분류: Military
-        (0x01 << 37) |   # 직업: Admiral
-        (0x52 << 29) |   # 국적: Korea
-        (0x5 << 25) |    # 시대: Early Modern
-        (0x0 << 21) |    # 연대
-        (0x01 << 19) |   # 성별: Male
-        (0x7 << 16) |    # 저명도: 1000+
-        (0x0)            # 언어/출생지역/활동분야
-    )
-)
+- 폐기 사유: GEUL v1은 레코드 종류를 TAG WORD로 가르고 양화를 `QQQ`로 한다. 옛 설계의 Prefix·Mode가 설 자리가 없다. 같은 SIDX에 여러 개체를 허용하던 옛 성질(Non-unique)은 "정수값이 같으면 같은 대상"과 맞지 않는다.
+- 가져갈 것: 빈도·계층 집계 방법, 위키미디어 내부 항목 제외 목록(`files/legacy/references/uncovered_types_analysis.md`), `P279` 상향 탐색 구상(`files/legacy/docs/entity-sidx-다음단계.md`, 미구현).
+
+## DB 접속 설정
+
+스크립트는 DB 비밀번호를 저장소 루트의 `.env`에서 읽는다(git 제외). `.env.example`을 `.env`로 복사하고 값을 채운다.
+
+```
+GEUL_READER_PASSWORD=   # geul_reader (geuldev 읽기)
+GEUL_WRITER_PASSWORD=   # geul_writer (geulwork 쓰기)
+POSTGRES_PASSWORD=      # postgres (artifacts/wikidata의 적재·조회 도구)
 ```
 
-### 추상: "모든 한국 남자"
+- Python은 `artifacts/scripts/sidx_env.py`의 `env()`, Go(`artifacts/wikidata/*.go`)는 파일 안의 `envValue()`로 읽는다. 환경변수에 같은 이름이 있으면 그 값이 우선이다.
 
-```python
-all_korean_men = make_entity(
-    mode=4,              # 전칭 (모든)
-    entity_type=0x00,    # Human
-    attrs=(
-        (0x00 << 43) |   # 소분류: 일반
-        (0x00 << 37) |   # 직업: 일반
-        (0x52 << 29) |   # 국적: Korea
-        (0x01 << 19) |   # 성별: Male
-        (0x0 << 16)      # 저명도: Unknown
-    )
-)
-```
+## 라이선스
 
-### 대명사: "그 사람"
+- 배정 결과(SIDX 표, GEUL 문서)는 CC0로 공표한다.
+- 코드는 MIT다. LICENSE 파일은 아직 두지 않았다.
 
-```python
-that_person = make_entity(
-    mode=1,              # 특정 단수
-    entity_type=0x00,    # Human
-    attrs=0              # 속성 미지정
-)
-```
+## 열린 질문
 
----
+- **폭.** 4 WORD, 16 WORD 등 무엇으로 할지. 고정 폭이라도 판본이 폭을 선언하고 늘릴 수 있게 둘지.
+- **근접도.** 무엇으로 잴지(계층 거리, 속성 공유, 공동 출현). 결정적이고 재현 가능해야 한다.
+- **비트 구획.** 명세는 SIDX를 "비트에 의미(종류, 속성)를 담은 식별자"라고도 한다. 상위 비트에 종류 구획을 둘지, 순서만 볼지.
+- **추가 시 안정성.** 빈자리를 얼마나 남길지, 빈자리가 차면 어떻게 할지. 번호를 옮겨야 하면 SIDX를 영구 식별자가 아니라 레지스트리 판본에 묶인 색인으로 볼지(명세 미결정).
+- **판본과 공표.** 배정을 어떤 GEUL 문서(Issuer, 문서 ID)로 내고 판본을 어떻게 매길지. 명세도 "코드북과 레지스트리 공개 형식"을 미결정으로 둔다.
+- **빈도 기준.** "자주 쓰이는"을 위키데이터 안 사용 빈도로 볼지, GEUL 문서 안 등장 빈도로 볼지. 어디서 자를지.
+- **대상 식별.** GEUL ID 레지스트리가 미정이다. 한 대상이 Q아이디와 GEUL ID를 둘 다 가지면 SIDX 하나만 받는다고 볼지.
+- **다중 이웃.** 부모가 여럿인 대상(`P279` 다중 부모 26,525)은 한 줄에서 한 자리만 받는다. 어느 이웃 곁에 둘지.
 
-## 8. 5단계 파이프라인
+## 관련 저장소
 
-위키데이터 실데이터 기반으로 48비트 코드북을 자동 설계하는 파이프라인.
-
-| Stage | 스크립트 | 설명 |
-|-------|----------|------|
-| 1 | `scripts/stage1_extract.py` | 위키데이터에서 각 EntityType의 속성 분포 분석 |
-| 2 | `scripts/stage2_dependency.py` | 속성 간 조건부 엔트로피로 종속 관계 DAG 생성 |
-| 3 | `scripts/stage3_allocate.py` | 48비트에 속성 배치, 충돌 최소화 |
-| 4 | `scripts/stage4_codebook.py` | 계층적 코드북 자동 생성 |
-| 5 | `scripts/stage5_validate.py` | 전체 개체 인코딩 후 충돌률 측정 |
-
-```bash
-# 가상환경 설정
-python3 -m venv .venv
-source .venv/bin/activate
-pip install psycopg2-binary
-
-# 순서대로 실행
-python scripts/stage1_extract.py
-python scripts/stage2_dependency.py
-python scripts/stage3_allocate.py
-python scripts/stage4_codebook.py
-python scripts/stage5_validate.py
-```
-
----
-
-## 9. 프로젝트 현황
-
-| 항목 | 수치 |
-|------|------|
-| 위키데이터 전체 개체 | 117,419,925 |
-| Wikimedia 내부 (제외) | 8,565,353 (7.3%) |
-| SIDX 대상 | 108,854,572 (92.7%) |
-| 64개 타입 직접 커버 | 36,295,074 (33.3%) |
-| 하위 타입 흡수 | 71,842,429 (66.0%) |
-| Other 폴백 | 717,069 (0.7%) |
-| **최종 커버리지** | **100%** |
-| **충돌률** | **< 0.01%** |
-
----
-
-## 10. 기술 스택
-
-| 항목 | 기술 |
-|------|------|
-| 언어 | Python 3.12+ |
-| DB | PostgreSQL (ltree 확장 필수) |
-| Python 패키지 | psycopg2 |
-
----
-
-## 관련 프로젝트
-
-| 레포 | 관계 |
-|------|------|
-| [geul](https://github.com/pjw/geul) | 상위 — 문법 명세 + SIDX 횡단 문서 |
-| [geul-verb](https://github.com/pjw/geul-verb) | 형제 — 동사 SIDX 16비트 코드북 |
+| 저장소 | 관계 |
+|---|---|
+| geul-dev | GEUL v1 명세 |
+| [wikipg](https://github.com/geul-org/wikipg) | 위키데이터 덤프 → geuldev `wikidata` 적재 |
+| [gogeulwiki](https://github.com/geul-org/gogeulwiki) | 위키데이터 → GEUL 변환 |
+| [gogeul](https://github.com/geul-org/gogeul) | GEUL Go 라이브러리 |

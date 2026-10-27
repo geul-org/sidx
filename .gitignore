@@ -38,3 +38,5 @@ Thumbs.db
 .env.*
 *.key
 credentials.json
+AGENTS.md
+!.env.example
