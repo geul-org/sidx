@@ -117,8 +117,8 @@ POSTGRES_PASSWORD=      # postgres (artifacts/wikidata의 적재·조회 도구)
 
 ## 라이선스
 
-- 배정 결과(SIDX 표, GEUL 문서)는 CC0로 공표한다.
-- 코드는 MIT다. LICENSE 파일은 아직 두지 않았다.
+- 우리 저작물(코드, 문서, 배정 결과인 SIDX 표와 GEUL 문서)은 모두 CC0 1.0이다([LICENSE](LICENSE)).
+- 원천인 위키데이터도 CC0다.
 
 ## 열린 질문
 
