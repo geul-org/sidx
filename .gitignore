@@ -40,3 +40,9 @@ Thumbs.db
 credentials.json
 AGENTS.md
 !.env.example
+*.pem
+
+# TSMA
+session.json
+tsma-results.jsonl
+**/.tsma/
