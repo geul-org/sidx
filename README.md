@@ -40,7 +40,7 @@ Database passwords are read from environment variables or from a `.env` file at 
 | Repository | Relation |
 |---|---|
 | [wikipg](https://github.com/geul-org/wikipg) | Loads Wikidata dumps into PostgreSQL |
-| [gogeulwiki](https://github.com/geul-org/gogeulwiki) | Converts Wikidata into GEUL documents |
+| [wikigeul](https://github.com/geul-org/wikigeul) | Converts Wikidata into GEUL documents |
 | [gogeul](https://github.com/geul-org/gogeul) | GEUL Go library |
 
 ## License
