@@ -1,13 +1,23 @@
 sidx — Notice
 =============
 
-Scope of CC0
-------------
-The GEUL project's own work in this repository — code, documents, data and
-other material we created — is dedicated to the public domain under CC0 1.0
-Universal. LICENSE holds the CC0 1.0 legal text verbatim (unmodified, so that
-it is recognised as CC0-1.0); this section states what it covers.
+License scope
+-------------
+Code in this repository is licensed under the MIT License (LICENSE).
 
-CC0 covers only our own work. Third-party material keeps its own license and is
-not covered by CC0: none is bundled at present. The data source, Wikidata, is
-itself CC0.
+CC0 data and documents in this repository:
+  - README.md and docs/
+  - artifacts/ (scripts' outputs, e.g. artifacts/wikidata/*.json, derived
+    from Wikidata, which is CC0)
+  - files/legacy/ (earlier plans, reports, references and output)
+
+Data and documents that the GEUL project produced are dedicated to the public
+domain under CC0 1.0 Universal
+(https://creativecommons.org/publicdomain/zero/1.0/legalcode). No separate
+CC0 text file is kept here; the legal code at that address applies.
+
+Versions released before 2026-11-14 under CC0 remain CC0.
+
+Third-party material keeps its own license and is covered by neither MIT nor
+CC0 above: none is bundled at present. The data source, Wikidata, is itself CC0.
+

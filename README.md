@@ -45,4 +45,4 @@ Database passwords are read from environment variables or from a `.env` file at 
 
 ## License
 
-Our own work in this repository (code, documents, data) is dedicated to the public domain under [CC0 1.0](LICENSE). The data source, Wikidata, is also CC0.
+The code in this repository is under the [MIT License](LICENSE). The documents and data we produced are CC0 1.0 (see [NOTICE](NOTICE)). The data source, Wikidata, is also CC0.
